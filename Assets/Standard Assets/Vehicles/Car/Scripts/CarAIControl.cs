@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using Random = UnityEngine.Random;
+using UnityStandardAssets.Utility;
 
 namespace UnityStandardAssets.Vehicles.Car
 {
@@ -50,7 +51,8 @@ namespace UnityStandardAssets.Vehicles.Car
         // what should the AI consider when accelerating/braking?
         [SerializeField] private bool m_Driving;
         // whether the AI is currently actively driving or stopped.
-        [SerializeField] private Transform m_Target;
+
+		[SerializeField] private WaypointCircuit m_Circuit;
         // 'target' the target object to aim for.
         [SerializeField] private bool m_StopWhenTargetReached;
         // should we stop driving when we reach the target?
@@ -68,6 +70,9 @@ namespace UnityStandardAssets.Vehicles.Car
         private float m_AvoidPathOffset;
         // direction (-1 or 1) in which to offset path to avoid other car, whilst avoiding
         private Rigidbody m_Rigidbody;
+		private Transform m_Target;
+
+		private int m_Target_idx = 0;
 
 
         private void Awake ()
@@ -84,13 +89,14 @@ namespace UnityStandardAssets.Vehicles.Car
 
         private void FixedUpdate ()
         {
-            if (m_Target == null || !m_Driving) {
+			if (m_Circuit == null || !m_Driving) {
                 // Car should not be moving,
                 // use handbrake to stop
                     m_CarController.Move (0, 0, -1f, 1f);
                 }
             else
             {
+				m_Target = m_Circuit.Waypoints[m_Target_idx];
                 Vector3 fwd = transform.forward;
                 if (m_Rigidbody.velocity.magnitude > m_CarController.MaxSpeed * 0.1f) {
                     fwd = m_Rigidbody.velocity;
@@ -189,8 +195,13 @@ namespace UnityStandardAssets.Vehicles.Car
                 m_CarController.Move (steer, accel, accel, 0f);
 
                 // if appropriate, stop driving when we're close enough to the target.
-                if (m_StopWhenTargetReached && localTarget.magnitude < m_ReachTargetThreshold) {
-                    m_Driving = false;
+				if (localTarget.magnitude < m_ReachTargetThreshold) {
+					if (m_StopWhenTargetReached) {
+						m_Driving = false;
+					}
+
+					m_Target_idx += 1;
+					m_Target_idx = m_Target_idx % m_Circuit.Waypoints.Length;
                 }
             }
         }
@@ -224,9 +235,10 @@ namespace UnityStandardAssets.Vehicles.Car
         }
 
 
-        public void SetTarget (Transform target)
+		public void SetTarget (WaypointCircuit circuit)
         {
-            m_Target = target;
+			m_Circuit = circuit;
+			m_Target_idx = 0;
             m_Driving = true;
         }
     }

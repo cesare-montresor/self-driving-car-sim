@@ -49,8 +49,20 @@ namespace UnityStandardAssets.Vehicles.Car
         public const string DirFrames = "IMG";
 
         [SerializeField] private Camera CenterCamera;
-        [SerializeField] private Camera LeftCamera;
-        [SerializeField] private Camera RightCamera;
+
+		//TODO: find out how to use arrays in the inspector, rofl
+
+		[SerializeField] private Camera LeftCamera0;
+		[SerializeField] private Camera LeftCamera1;
+		[SerializeField] private Camera LeftCamera2;
+		[SerializeField] private Camera LeftCamera3;
+
+		[SerializeField] private Camera RightCamera0;
+		[SerializeField] private Camera RightCamera1;
+		[SerializeField] private Camera RightCamera2;
+		[SerializeField] private Camera RightCamera3;
+
+		private int sideCameraCount = 4;
 
         private Quaternion[] m_WheelMeshLocalRotations;
         private Vector3 m_Prevpos, m_Pos;
@@ -420,10 +432,23 @@ namespace UnityStandardAssets.Vehicles.Car
 				transform.position = sample.position;
 				transform.rotation = sample.rotation;
 
+				string sampleTimestamp = sample.timeStamp;
 				// Capture and Persist Image
-				string centerPath = WriteImage (CenterCamera, "center", sample.timeStamp);
-				string leftPath = WriteImage (LeftCamera, "left", sample.timeStamp);
-				string rightPath = WriteImage (RightCamera, "right", sample.timeStamp);
+				string centerPath = WriteImage (CenterCamera, "center", sampleTimestamp);
+
+				string leftPath = "";
+				string rightPath = "";
+
+				//TODO: getting to like java-like arrays and lists
+				leftPath += WriteImage (LeftCamera0, ("left_0"), sampleTimestamp)+"|";
+				leftPath += WriteImage (LeftCamera1, ("left_1"), sampleTimestamp)+"|";
+				leftPath += WriteImage (LeftCamera2, ("left_2"), sampleTimestamp)+"|";
+				leftPath += WriteImage (LeftCamera3, ("left_3"), sampleTimestamp);
+
+				rightPath += WriteImage (RightCamera0, ("right_0"), sampleTimestamp)+"|";
+				rightPath += WriteImage (RightCamera2, ("right_2"), sampleTimestamp)+"|";
+				rightPath += WriteImage (RightCamera1, ("right_1"), sampleTimestamp)+"|";
+				rightPath += WriteImage (RightCamera3, ("right_3"), sampleTimestamp);
 
 				string row = string.Format ("{0},{1},{2},{3},{4},{5},{6}\n", centerPath, leftPath, rightPath, sample.steeringAngle, sample.throttle, sample.brake, sample.speed);
 				File.AppendAllText (Path.Combine (m_saveLocation, CSVFileName), row);
